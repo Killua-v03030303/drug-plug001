@@ -15,73 +15,103 @@ struct ContentView: View {
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 0) {
-                // Header
-                HeaderView()
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
+            HStack(spacing: 0) {
+                // Sidebar Navigation
+                SidebarView()
+                    .frame(width: 80)
+                    .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
                 
-                // Main Content
-                ScrollView {
-                    VStack(spacing: 24) {
-                        // Timer Section
-                        TimerCardView()
-                        
-                        // Quick Actions
-                        QuickActionsView()
-                        
-                        // Music Player
-                        MusicPlayerView()
-                        
-                        // Stats Preview
-                        StatsPreviewView()
+                // Main Content Area
+                VStack(spacing: 0) {
+                    // Top Header
+                    TopHeaderView()
+                        .padding(.horizontal, 32)
+                        .padding(.top, 24)
+                    
+                    // Content based on selected view
+                    ScrollView {
+                        VStack(spacing: 32) {
+                            switch appState.selectedTab {
+                            case .timer:
+                                TimerMainView()
+                            case .stats:
+                                StatsMainView()
+                            case .music:
+                                MusicMainView()
+                            case .settings:
+                                SettingsMainView()
+                            }
+                        }
+                        .padding(.horizontal, 32)
+                        .padding(.bottom, 32)
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 20)
                 }
+                .frame(maxWidth: .infinity)
+                .background(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.08, green: 0.08, blue: 0.12),
+                            Color(red: 0.05, green: 0.05, blue: 0.08)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
             }
         }
-        .frame(minWidth: 400, minHeight: 600)
-        .background(Color.black.ignoresSafeArea())
+        .frame(minWidth: 900, minHeight: 700)
+        .background(Color(red: 0.05, green: 0.05, blue: 0.08))
     }
 }
 
-struct HeaderView: View {
+struct TopHeaderView: View {
     @EnvironmentObject var statsManager: StatsManager
     
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 16) {
             HStack {
-                Text("FOCUS")
-                    .font(.title.bold())
-                    .foregroundColor(.white) +
-                Text("PLUG")
-                    .font(.title.bold())
-                    .foregroundColor(.red)
-                
-                Spacer()
-                
-                Button(action: {}) {
-                    Image(systemName: "gearshape")
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 4) {
+                        Text("FOCUS")
+                            .font(.title.weight(.heavy))
+                            .foregroundColor(.white)
+                        Text("PLUG")
+                            .font(.title.weight(.heavy))
+                            .foregroundColor(.red)
+                    }
+                    
+                    Text("Your drug dealer for focus 💊")
+                        .font(.caption)
                         .foregroundColor(.gray)
-                        .font(.title2)
                 }
-                .buttonStyle(PlainButtonStyle())
-            }
-            
-            Text("Your drug dealer for focus 💊")
-                .font(.caption)
-                .foregroundColor(.gray)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            
-            // Streak indicator
-            HStack {
-                Image(systemName: "flame")
-                    .foregroundColor(.orange)
-                Text("\(statsManager.currentStreak) day streak")
-                    .font(.caption.weight(.medium))
-                    .foregroundColor(.orange)
+                
                 Spacer()
+                
+                // Streak indicator
+                HStack(spacing: 8) {
+                    Image(systemName: "flame.fill")
+                        .foregroundColor(.orange)
+                        .font(.title3)
+                    
+                    VStack(alignment: .trailing, spacing: 0) {
+                        Text("\(statsManager.currentStreak)")
+                            .font(.title2.weight(.bold))
+                            .foregroundColor(.orange)
+                        Text("day streak")
+                            .font(.caption2)
+                            .foregroundColor(.gray)
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.orange.opacity(0.1))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                        )
+                )
             }
         }
     }

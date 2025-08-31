@@ -12,47 +12,34 @@ struct QuickActionsView: View {
     @State private var showingBlockList = false
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 16) {
             Text("QUICK ACTIONS")
                 .font(.caption.weight(.bold))
                 .foregroundColor(.gray)
                 .tracking(1)
             
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
-                ActionButton(
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 16) {
+                ModernActionButton(
                     title: "Block Sites",
-                    subtitle: "Manually block distractions",
-                    icon: "shield.slash",
-                    color: .red
+                    subtitle: "Lock down distractions",
+                    icon: "shield.slash.fill",
+                    color: .red,
+                    isActive: blockerService.isBlocking
                 ) {
-                    blockerService.blockWebsites()
+                    if blockerService.isBlocking {
+                        blockerService.unblockAll()
+                    } else {
+                        blockerService.blockWebsites()
+                    }
                 }
                 
-                ActionButton(
+                ModernActionButton(
                     title: "Break Mode",
-                    subtitle: "5 min unblock",
-                    icon: "cup.and.saucer",
+                    subtitle: "5 min freedom",
+                    icon: "cup.and.saucer.fill",
                     color: .green
                 ) {
                     blockerService.breakMode()
-                }
-                
-                ActionButton(
-                    title: "Block List",
-                    subtitle: "Manage websites",
-                    icon: "list.bullet",
-                    color: .blue
-                ) {
-                    showingBlockList = true
-                }
-                
-                ActionButton(
-                    title: "Stats",
-                    subtitle: "View progress",
-                    icon: "chart.bar",
-                    color: .purple
-                ) {
-                    // Navigate to stats
                 }
             }
         }
@@ -62,24 +49,42 @@ struct QuickActionsView: View {
     }
 }
 
-struct ActionButton: View {
+struct ModernActionButton: View {
     let title: String
     let subtitle: String
     let icon: String
     let color: Color
+    let isActive: Bool
     let action: () -> Void
+    
+    @State private var isHovered = false
+    
+    init(title: String, subtitle: String, icon: String, color: Color, isActive: Bool = false, action: @escaping () -> Void) {
+        self.title = title
+        self.subtitle = subtitle
+        self.icon = icon
+        self.color = color
+        self.isActive = isActive
+        self.action = action
+    }
     
     var body: some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 16) {
                 HStack {
                     Image(systemName: icon)
-                        .font(.title2)
-                        .foregroundColor(color)
+                        .font(.title2.weight(.medium))
+                        .foregroundColor(isActive ? .white : color)
                     Spacer()
+                    
+                    if isActive {
+                        Circle()
+                            .fill(Color.green)
+                            .frame(width: 8, height: 8)
+                    }
                 }
                 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 4) {
                     Text(title)
                         .font(.headline.weight(.semibold))
                         .foregroundColor(.white)
@@ -90,17 +95,48 @@ struct ActionButton: View {
                 
                 Spacer()
             }
-            .padding(16)
-            .frame(height: 80)
+            .padding(20)
+            .frame(height: 100)
             .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.gray.opacity(0.1))
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(
+                        isActive ?
+                        LinearGradient(
+                            colors: [color.opacity(0.8), color.opacity(0.6)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ) :
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(isHovered ? 0.08 : 0.05),
+                                Color.white.opacity(isHovered ? 0.05 : 0.02)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
                     .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(color.opacity(0.3), lineWidth: 1)
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(
+                                isActive ? color.opacity(0.5) : color.opacity(0.2),
+                                lineWidth: 1
+                            )
+                    )
+                    .shadow(
+                        color: isActive ? color.opacity(0.3) : .black.opacity(0.1),
+                        radius: isActive ? 12 : 8,
+                        x: 0,
+                        y: isActive ? 6 : 4
                     )
             )
         }
         .buttonStyle(PlainButtonStyle())
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isHovered = hovering
+            }
+        }
+        .scaleEffect(isHovered ? 1.02 : 1.0)
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isHovered)
     }
 }
